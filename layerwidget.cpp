@@ -5,9 +5,10 @@
 #include <QString>
 #include <QEvent>
 
-LayerWidget::LayerWidget(QString name, QWidget *parent) :
+LayerWidget::LayerWidget(const QString &name, const int &position, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::LayerWidget)
+    ui(new Ui::LayerWidget),
+    position_(position)
 {
     ui->setupUi(this);
 

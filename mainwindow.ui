@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>671</height>
+    <height>837</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
              <x>0</x>
              <y>0</y>
              <width>198</width>
-             <height>671</height>
+             <height>811</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -78,7 +78,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox">
+             <widget class="QComboBox" name="dataTypeComboBox">
               <item>
                <property name="text">
                 <string>Float</string>
@@ -105,7 +105,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox_2">
+             <widget class="QComboBox" name="lossFunctionComboBox">
               <item>
                <property name="text">
                 <string>Mean Squared Error</string>
@@ -296,6 +296,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="trainButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Train</string>
               </property>
@@ -303,8 +306,18 @@
             </item>
             <item>
              <widget class="QPushButton" name="testButton">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Test</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="clearConsoleButton">
+              <property name="text">
+               <string>Clear Console</string>
               </property>
              </widget>
             </item>
@@ -764,13 +777,13 @@
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents">
+           <widget class="QWidget" name="editorScrollAreaWidgetContents">
             <property name="geometry">
              <rect>
               <x>325</x>
               <y>0</y>
               <width>16</width>
-              <height>573</height>
+              <height>233</height>
              </rect>
             </property>
             <property name="sizePolicy">
@@ -804,7 +817,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QTextEdit" name="textEdit">
+       <widget class="QTextEdit" name="consoleTextEdit">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -817,7 +830,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>65</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="sizeIncrement">
@@ -834,6 +847,9 @@
         </property>
         <property name="sizeAdjustPolicy">
          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+        </property>
+        <property name="undoRedoEnabled">
+         <bool>false</bool>
         </property>
         <property name="readOnly">
          <bool>true</bool>

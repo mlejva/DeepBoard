@@ -4,6 +4,9 @@
 #
 #-------------------------------------------------
 
+CONFIG += c++14
+QMAKE_CXXFLAGS += -Wno-unicode-whitespace
+
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -28,7 +31,23 @@ SOURCES += main.cpp\
     layerwidget.cpp
 
 HEADERS  += mainwindow.h \
-    layerwidget.h
+    layerwidget.h \
+    ../DeepEngine/DeepEngine/Functions/ActivationFunctions/ActivationFunctionInterface.h \
+    ../DeepEngine/DeepEngine/Functions/ActivationFunctions/IdentityActivationFunction.h \
+    ../DeepEngine/DeepEngine/Functions/ActivationFunctions/ReluActivationFunction.h \
+    ../DeepEngine/DeepEngine/Functions/ActivationFunctions/SigmoidActivationFunction.h \
+    ../DeepEngine/DeepEngine/Functions/ActivationFunctions/TanhActivationFunction.h \
+    ../DeepEngine/DeepEngine/Functions/LossFunctions/LossFunctionInterface.h \
+    ../DeepEngine/DeepEngine/Functions/LossFunctions/MSELossFunction.h \
+    ../DeepEngine/DeepEngine/Layers/IdentityLayer.h \
+    ../DeepEngine/DeepEngine/Layers/InputLayer.h \
+    ../DeepEngine/DeepEngine/Layers/LayerInterface.h \
+    ../DeepEngine/DeepEngine/Layers/ReluLayer.h \
+    ../DeepEngine/DeepEngine/Layers/SigmoidLayer.h \
+    ../DeepEngine/DeepEngine/Layers/TanhLayer.h \
+    ../DeepEngine/DeepEngine/Matrix.h \
+    ../DeepEngine/DeepEngine/Network.h \
+    ../DeepEngine/DeepEngine/Vector.h
 
 FORMS    += mainwindow.ui \
     layerwidget.ui

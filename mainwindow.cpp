@@ -8,19 +8,27 @@
 #include <QString>
 #include <QScrollBar>
 #include <QPushButton>
+#include <algorithm>
 
+#include "../DeepEngine/DeepEngine/Network.h"
+#include "../DeepEngine/DeepEngine/Functions/LossFunctions/MSELossFunction.h"
 
+typedef Functions::MSELossFunction<double> MSEDouble;
+typedef Functions::MSELossFunction<float> MSEFloat;
+
+/* Constructors & Destructor */
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    static_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout())->setSpacing(10);
+    static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout())->setSpacing(10);
 
     layersCount = 0;
     connect(ui->addLayerButton, SIGNAL(clicked()), this, SLOT(addLayerButtonClicked()));
     connect(ui->trainButton, SIGNAL(clicked()), this, SLOT(trainButtonClicked()));
+    connect(ui->clearConsoleButton, SIGNAL(clicked()), this, SLOT(clearConsoleButtonClicked()));
 }
 
 MainWindow::~MainWindow()
@@ -28,15 +36,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-/* SLOTS */
+/* Public functions */
+void MainWindow::printToConsole(const QString &text)
+{
+    ui->consoleTextEdit->append(">> " + text);
+}
+
+
+/* Slots */
 void MainWindow::addLayerButtonClicked()
 {
     layersCount++;
-    QString name = "Layer " + QString::number(layersCount );
-    LayerWidget *layer = new LayerWidget(name, this);
+    ui->trainButton->setEnabled(true);
+    ui->testButton->setEnabled(true);
+
+    QString name = "Layer " + QString::number(layersCount);
+    LayerWidget *layer = new LayerWidget(name, layersCount - 1, this);
     layer->setObjectName(name);
 
-    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
+    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout());
     editorLayout->addWidget(layer);
     connect(layer, SIGNAL(hovered()), this, SLOT(layerWidgetHovered()));
     connect(layer, SIGNAL(hoverEnded()), this, SLOT(layerWidgetHoverEnded()));
@@ -78,7 +96,31 @@ void MainWindow::addLayerButtonClicked()
 
 void MainWindow::trainButtonClicked()
 {
+    const QString &selectedDataTypeText = ui->dataTypeComboBox->currentText();
+    const QString &selectedLossFunctionText = ui->lossFunctionComboBox->currentText();
 
+    QList<LayerWidget*> allLayers = ui->editorScrollAreaWidgetContents->findChildren<LayerWidget*>();
+
+    // Sort layers with position as the key
+    std::sort(allLayers.begin(), allLayers.end(), [](auto &lhs, auto &rhs) {
+        return lhs->getPosition() < rhs->getPosition();
+    });
+
+    if (selectedDataTypeText == "Float") {
+        if (selectedLossFunctionText == "Mean Squared Error") {
+            auto network = MainWindow::setupNetwork<float, MSEFloat>(allLayers);
+        }
+    }
+    else if (selectedDataTypeText == "Double") {
+        if (selectedLossFunctionText == "Mean Squared Error") {
+            auto network = MainWindow::setupNetwork<double, MSEDouble>(allLayers);
+        }
+    }
+}
+
+void MainWindow::clearConsoleButtonClicked()
+{
+    ui->consoleTextEdit->clear();
 }
 
 void MainWindow::layerWidgetHovered()
@@ -106,7 +148,7 @@ void MainWindow::layerWidgetMouseReleased()
 void MainWindow::layerWidgetMoveUpButtonClicked()
 {
     LayerWidget *layer = static_cast<LayerWidget*>(sender()->parent()->parent());
-    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
+    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout());
 
     const int index = editorLayout->indexOf(layer);
 
@@ -114,7 +156,10 @@ void MainWindow::layerWidgetMoveUpButtonClicked()
     editorLayout->insertWidget(index - 1, layer);
 
     const int newIndex = editorLayout->indexOf(layer);
+    layer->setPosition(newIndex);
+
     LayerWidget *switchedLayer = static_cast<LayerWidget*>(editorLayout->itemAt(newIndex + 1)->widget());
+    switchedLayer->setPosition(newIndex + 1);
 
     // Enable move down button of this layer
     QPushButton *layerMoveDownButton = layer->findChild<QPushButton*>("moveDownButton");
@@ -141,7 +186,7 @@ void MainWindow::layerWidgetMoveUpButtonClicked()
 void MainWindow::layerWidgetMoveDownButtonClicked()
 {
     LayerWidget *layer = static_cast<LayerWidget*>(sender()->parent()->parent());
-    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
+    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout());
 
     const int index = editorLayout->indexOf(layer);
 
@@ -149,7 +194,10 @@ void MainWindow::layerWidgetMoveDownButtonClicked()
     editorLayout->insertWidget(index + 1, layer);
 
     const int newIndex = editorLayout->indexOf(layer);
+    layer->setPosition(newIndex);
+
     LayerWidget *switchedLayer = static_cast<LayerWidget*>(editorLayout->itemAt(newIndex - 1)->widget());
+    switchedLayer->setPosition(newIndex - 1);
 
     // Enable move up button of this layer
     QPushButton *layerMoveUpButton = layer->findChild<QPushButton*>("moveUpButton");
@@ -176,8 +224,45 @@ void MainWindow::layerWidgetMoveDownButtonClicked()
 void MainWindow::layerWidgetRemoveButtonClicked()
 {
     LayerWidget *layer = static_cast<LayerWidget*>(sender()->parent()->parent());
-    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->scrollAreaWidgetContents->layout());
+    QVBoxLayout *editorLayout = static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout());
 
+    const int countBeforeRemove = editorLayout->count();
+    const int removeLayerIndex = editorLayout->indexOf(layer);
     editorLayout->removeWidget(layer);
+    delete layer;
     layersCount--;
+
+    // Enable/disable moving button of sorrounding layers
+
+    // a) Removed layer wasn't first or wasn't last, i.e. was in middle
+    // -> Sorrounding layers should still have enabled/disabled moving buttons as before
+
+    // b) Removed layer was first
+    if (removeLayerIndex == 0)
+    {
+        const int layerAfterIndex = removeLayerIndex;
+
+        // Disable move up button of layer after
+        LayerWidget *layerAfter = static_cast<LayerWidget*>(editorLayout->itemAt(layerAfterIndex)->widget());
+
+        QPushButton *moveUpButton = layerAfter->findChild<QPushButton*>("moveUpButton");
+        moveUpButton->setEnabled(false);
+    }
+    // c) Removed layer was last
+    if (removeLayerIndex == countBeforeRemove - 1)
+    {
+        const int layerAboveIndex = removeLayerIndex - 1;
+
+        // Disable move down button of layer above
+        LayerWidget *layerAbove = static_cast<LayerWidget*>(editorLayout->itemAt(layerAboveIndex)->widget());
+
+        QPushButton *moveDownButton = layerAbove->findChild<QPushButton*>("moveDownButton");
+        moveDownButton->setEnabled(false);
+    }
+
+    if (editorLayout->count() == 0) // No layers
+    {
+        ui->trainButton->setEnabled(false);
+        ui->testButton->setEnabled(false);
+    }
 }

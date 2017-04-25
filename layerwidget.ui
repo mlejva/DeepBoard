@@ -967,7 +967,7 @@ QWidget#innerWidget:hover {
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="comboBox">
+         <widget class="QComboBox" name="activationFunctionComboBox">
           <item>
            <property name="text">
             <string>Identity</string>
@@ -1002,7 +1002,7 @@ QWidget#innerWidget:hover {
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="spinBox">
+         <widget class="QSpinBox" name="outputSizeSpinBox">
           <property name="focusPolicy">
            <enum>Qt::ClickFocus</enum>
           </property>
