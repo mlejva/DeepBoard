@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>159</height>
+    <height>163</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1008,6 +1008,9 @@ QWidget#innerWidget:hover {
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="minimum">
+           <number>1</number>
           </property>
           <property name="maximum">
            <number>99999999</number>

@@ -23,12 +23,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    layersCount = 0;
     static_cast<QVBoxLayout*>(ui->editorScrollAreaWidgetContents->layout())->setSpacing(10);
 
-    layersCount = 0;
+    connect(ui->trainInputButton, SIGNAL(clicked()), this, SLOT(trainInputButtonClicked()));
+    connect(ui->trainExpectedOutputButton, SIGNAL(clicked()), this, SLOT(trainExpectedOutputButtonClicked()));
+    connect(ui->testInputButton, SIGNAL(clicked()), this, SLOT(testInputButtonClicked()));
+    connect(ui->testExpectedOutputButton, SIGNAL(clicked()), this, SLOT(testExpectedOutputButtonClicked()));
+    connect(ui->saveOutputButton, SIGNAL(clicked()), this, SLOT(saveOutputButtonClicked()));    
+
     connect(ui->addLayerButton, SIGNAL(clicked()), this, SLOT(addLayerButtonClicked()));
-    connect(ui->trainButton, SIGNAL(clicked()), this, SLOT(trainButtonClicked()));
-    connect(ui->clearConsoleButton, SIGNAL(clicked()), this, SLOT(clearConsoleButtonClicked()));
+    connect(ui->runButton, SIGNAL(clicked()), this, SLOT(runButtonClicked()));
+    connect(ui->clearConsoleButton, SIGNAL(clicked()), this, SLOT(clearConsoleButtonClicked()));    
 }
 
 MainWindow::~MainWindow()
@@ -37,18 +43,85 @@ MainWindow::~MainWindow()
 }
 
 /* Public functions */
-void MainWindow::printToConsole(const QString &text)
-{
+void MainWindow::printToConsole(const QString &text, const QColor &c)
+{    
+    ui->consoleTextEdit->setTextColor(c);
     ui->consoleTextEdit->append(">> " + text);
 }
 
+/* Private functions */
+QString MainWindow::openFileDialog(const QString &message, const QString &path, const QString &filter)
+{
+    QString fileName = QFileDialog::getOpenFileName(this, message, path, filter);
+    return fileName;
+}
+
+void MainWindow::chartLoss(const std::vector<double> &lossData)
+{
+    // Delete chart from a previous run
+    QLayoutItem *child;
+    while ((child = ui->chartTab->layout()->takeAt(0)) != 0)
+    {
+      delete child;
+    }
+
+    QLineSeries *series = new QLineSeries();
+    for (auto i = 0; i < lossData.size(); ++i)
+    {
+        auto& loss = lossData.at(i);
+        series->append(i, loss);
+    }
+
+    QChart *chart = new QChart();
+    chart->legend()->hide();
+    chart->addSeries(series);
+    chart->createDefaultAxes();
+    chart->setTitle("Network's loss function progress");
+
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    ui->chartTab->layout()->addWidget(chartView);
+}
 
 /* Slots */
+void MainWindow::trainInputButtonClicked()
+{
+    QString selectedFile = openFileDialog("Select Train Input", QDir::currentPath(), "Text files (*.txt)");
+    ui->trainInputButton->setText(selectedFile);
+}
+
+void MainWindow::trainExpectedOutputButtonClicked()
+{
+    QString selectedFile = openFileDialog("Select Train Expected Output", QDir::currentPath(), "Text files (*.txt)");
+    ui->trainExpectedOutputButton->setText(selectedFile);
+}
+
+void MainWindow::testInputButtonClicked()
+{
+    QString selectedFile = openFileDialog("Select Test Input", QDir::currentPath(), "Text files (*.txt)");
+    ui->testInputButton->setText(selectedFile);
+}
+
+void MainWindow::testExpectedOutputButtonClicked()
+{
+    QString selectedFile = openFileDialog("Select Test Expected Output", QDir::currentPath(), "Text files (*.txt)");
+    ui->testExpectedOutputButton->setText(selectedFile);
+}
+
+void MainWindow::saveOutputButtonClicked()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Select Where To Save Output"),
+                                                 QDir::currentPath(),
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+    ui->saveOutputButton->setText(dir);
+}
+
 void MainWindow::addLayerButtonClicked()
 {
     layersCount++;
-    ui->trainButton->setEnabled(true);
-    ui->testButton->setEnabled(true);
+    ui->runButton->setEnabled(true);
 
     QString name = "Layer " + QString::number(layersCount);
     LayerWidget *layer = new LayerWidget(name, layersCount - 1, this);
@@ -94,26 +167,96 @@ void MainWindow::addLayerButtonClicked()
 
 }
 
-void MainWindow::trainButtonClicked()
+void MainWindow::runButtonClicked()
 {
     const QString &selectedDataTypeText = ui->dataTypeComboBox->currentText();
     const QString &selectedLossFunctionText = ui->lossFunctionComboBox->currentText();
 
     QList<LayerWidget*> allLayers = ui->editorScrollAreaWidgetContents->findChildren<LayerWidget*>();
 
-    // Sort layers with position as the key
+    // Sort layers with their position property as the key
     std::sort(allLayers.begin(), allLayers.end(), [](auto &lhs, auto &rhs) {
         return lhs->getPosition() < rhs->getPosition();
-    });
+    });    
 
     if (selectedDataTypeText == "Float") {
         if (selectedLossFunctionText == "Mean Squared Error") {
             auto network = MainWindow::setupNetwork<float, MSEFloat>(allLayers);
+
+            const char &delimiter = ui->delimiterLineEdit->text().toStdString()[0];
+            const Matrix<float> trainInput(ui->trainInputButton->text().toStdString(), delimiter);
+            const Matrix<float> trainExpectedOutput(ui->trainExpectedOutputButton->text().toStdString(), delimiter);            
+
+            if (ui->testAfterEpochCheckBox->isChecked())
+            {
+                const Matrix<float> testInput(ui->testInputButton->text().toStdString(), delimiter);
+                const Matrix<float> testExpectedOutput(ui->testExpectedOutputButton->text().toStdString(), delimiter);
+
+                const bool saveNetworkTestOutput = ui->saveOutputCheckBox->isChecked();
+
+                QString outputPath = ui->saveOutputButton->text();
+                const QString &outputFileName = ui->outputFileNameLineEdit->text();
+                outputPath.append("/").append(outputFileName).append(".txt");
+
+                MainWindow::runNetwork<float, MSEFloat>(network,
+                                                             trainInput,
+                                                             trainExpectedOutput,
+                                                             testInput,
+                                                             testExpectedOutput,
+                                                             ui->batchSizeSpinBox->value(),
+                                                             ui->epochCountSpinBox->value(),
+                                                             saveNetworkTestOutput,
+                                                             outputPath);
+            }
+            else
+            {
+                MainWindow::runNetwork<float, MSEFloat>(network,
+                                                      trainInput,
+                                                      trainExpectedOutput,
+                                                      ui->batchSizeSpinBox->value(),
+                                                      ui->epochCountSpinBox->value());
+            }
+
         }
     }
     else if (selectedDataTypeText == "Double") {
         if (selectedLossFunctionText == "Mean Squared Error") {
             auto network = MainWindow::setupNetwork<double, MSEDouble>(allLayers);
+
+            const char &delimiter = ui->delimiterLineEdit->text().toStdString()[0];
+            const Matrix<double> trainInput(ui->trainInputButton->text().toStdString(), delimiter);
+            const Matrix<double> trainExpectedOutput(ui->trainExpectedOutputButton->text().toStdString(), delimiter);
+
+            if (ui->testAfterEpochCheckBox->isChecked())
+            {
+                const Matrix<double> testInput(ui->testInputButton->text().toStdString(), delimiter);
+                const Matrix<double> testExpectedOutput(ui->testExpectedOutputButton->text().toStdString(), delimiter);
+
+                const bool saveNetworkTestOutput = ui->saveOutputCheckBox->isChecked();
+
+                QString outputPath = ui->saveOutputButton->text();
+                const QString &outputFileName = ui->outputFileNameLineEdit->text();
+                outputPath.append("/").append(outputFileName).append(".txt");
+
+                MainWindow::runNetwork<double, MSEDouble>(network,
+                                                         trainInput,
+                                                         trainExpectedOutput,
+                                                         testInput,
+                                                         testExpectedOutput,
+                                                         ui->batchSizeSpinBox->value(),
+                                                         ui->epochCountSpinBox->value(),
+                                                         saveNetworkTestOutput,
+                                                         outputPath);
+            }
+            else
+            {
+                MainWindow::runNetwork<double, MSEDouble>(network,
+                                                          trainInput,
+                                                          trainExpectedOutput,
+                                                          ui->batchSizeSpinBox->value(),
+                                                          ui->epochCountSpinBox->value());
+            }
+
         }
     }
 }
@@ -232,37 +375,39 @@ void MainWindow::layerWidgetRemoveButtonClicked()
     delete layer;
     layersCount--;
 
-    // Enable/disable moving button of sorrounding layers
-
-    // a) Removed layer wasn't first or wasn't last, i.e. was in middle
-    // -> Sorrounding layers should still have enabled/disabled moving buttons as before
-
-    // b) Removed layer was first
-    if (removeLayerIndex == 0)
+    if (editorLayout->count() > 0)
     {
-        const int layerAfterIndex = removeLayerIndex;
+        // Enable/disable moving button of sorrounding layers
 
-        // Disable move up button of layer after
-        LayerWidget *layerAfter = static_cast<LayerWidget*>(editorLayout->itemAt(layerAfterIndex)->widget());
+        // a) Removed layer wasn't first or wasn't last, i.e. was in middle
+        // -> Sorrounding layers should still have enabled/disabled moving buttons as before
 
-        QPushButton *moveUpButton = layerAfter->findChild<QPushButton*>("moveUpButton");
-        moveUpButton->setEnabled(false);
-    }
-    // c) Removed layer was last
-    if (removeLayerIndex == countBeforeRemove - 1)
-    {
-        const int layerAboveIndex = removeLayerIndex - 1;
+        // b) Removed layer was first
+        if (removeLayerIndex == 0)
+        {
+            const int layerAfterIndex = removeLayerIndex;
 
-        // Disable move down button of layer above
-        LayerWidget *layerAbove = static_cast<LayerWidget*>(editorLayout->itemAt(layerAboveIndex)->widget());
+            // Disable move up button of layer after
+            LayerWidget *layerAfter = static_cast<LayerWidget*>(editorLayout->itemAt(layerAfterIndex)->widget());
 
-        QPushButton *moveDownButton = layerAbove->findChild<QPushButton*>("moveDownButton");
-        moveDownButton->setEnabled(false);
+            QPushButton *moveUpButton = layerAfter->findChild<QPushButton*>("moveUpButton");
+            moveUpButton->setEnabled(false);
+        }
+        // c) Removed layer was last
+        if (removeLayerIndex == countBeforeRemove - 1)
+        {
+            const int layerAboveIndex = removeLayerIndex - 1;
+
+            // Disable move down button of layer above
+            LayerWidget *layerAbove = static_cast<LayerWidget*>(editorLayout->itemAt(layerAboveIndex)->widget());
+
+            QPushButton *moveDownButton = layerAbove->findChild<QPushButton*>("moveDownButton");
+            moveDownButton->setEnabled(false);            
+        }        
     }
 
     if (editorLayout->count() == 0) // No layers
     {
-        ui->trainButton->setEnabled(false);
-        ui->testButton->setEnabled(false);
+        ui->runButton->setEnabled(false);
     }
 }
