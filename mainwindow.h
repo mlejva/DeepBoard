@@ -14,13 +14,13 @@
 #include <QtCharts/QChartView>
 
 
-#include "../DeepEngine/DeepEngine/Matrix.h"
-#include "../DeepEngine/DeepEngine/Network.h"
-#include "../DeepEngine/DeepEngine/Layers/TanhLayer.h"
-#include "../DeepEngine/DeepEngine/Layers/ReluLayer.h"
-#include "../DeepEngine/DeepEngine/Layers/LReluLayer.h"
-#include "../DeepEngine/DeepEngine/Layers/SigmoidLayer.h"
-#include "../DeepEngine/DeepEngine/Layers/IdentityLayer.h"
+#include "./DeepEngine-0.2.0/Matrix.h"
+#include "./DeepEngine-0.2.0/Network.h"
+#include "./DeepEngine-0.2.0/Layers/TanhLayer.h"
+#include "./DeepEngine-0.2.0/Layers/ReluLayer.h"
+#include "./DeepEngine-0.2.0/Layers/LReluLayer.h"
+#include "./DeepEngine-0.2.0/Layers/SigmoidLayer.h"
+#include "./DeepEngine-0.2.0/Layers/IdentityLayer.h"
 
 using namespace QtCharts;
 

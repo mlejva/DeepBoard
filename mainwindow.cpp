@@ -10,8 +10,8 @@
 #include <QPushButton>
 #include <algorithm>
 
-#include "../DeepEngine/DeepEngine/Network.h"
-#include "../DeepEngine/DeepEngine/Functions/LossFunctions/MSELossFunction.h"
+#include "./DeepEngine-0.2.0/Network.h"
+#include "./DeepEngine-0.2.0/Functions/LossFunctions/MSELossFunction.h"
 
 typedef Functions::MSELossFunction<double> MSEDouble;
 typedef Functions::MSELossFunction<float> MSEFloat;

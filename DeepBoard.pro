@@ -29,24 +29,43 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    layerwidget.cpp \
-    ./DeepEngine-0.2.0/Functions/ActivationFunctions/ActivationFunctionInterface.h \
-    ./DeepEngine-0.2.0/Functions/ActivationFunctions/IdentityActivationFunction.h \
-    ./DeepEngine-0.2.0/Functions/ActivationFunctions/ReluActivationFunction.h \
-    ./DeepEngine-0.2.0/Functions/ActivationFunctions/SigmoidActivationFunction.h \
-    ./DeepEngine-0.2.0/Functions/ActivationFunctions/TanhActivationFunction.h \
-    ./DeepEngine-0.2.0/Functions/LossFunctions/LossFunctionInterface.h \
-    ./DeepEngine-0.2.0/Functions/LossFunctions/MSELossFunction.h \
-    ./DeepEngine-0.2.0/Layers/IdentityLayer.h \
-    ./DeepEngine-0.2.0/Layers/InputLayer.h \
-    ./DeepEngine-0.2.0/Layers/LayerInterface.h \
-    ./DeepEngine-0.2.0/Layers/ReluLayer.h \
-    ./DeepEngine-0.2.0/Layers/SigmoidLayer.h \
-    ./DeepEngine-0.2.0/Layers/TanhLayer.h \
-    ./DeepEngine-0.2.0/Matrix.h \
-    ./DeepEngine-0.2.0/Network.h \
-    ./DeepEngine-0.2.0/Vector.h
+    layerwidget.cpp
 
+win32 {
+    SOURCES += ".\DeepEngine-0.2.0\Functions\ActivationFunctions\ActivationFunctionInterface.h" \
+        ".\DeepEngine-0.2.0\Functions\ActivationFunctions\IdentityActivationFunction.h" \
+        ".\DeepEngine-0.2.0\Functions\ActivationFunctions\ReluActivationFunction.h" \
+        ".\DeepEngine-0.2.0\Functions\ActivationFunctions\SigmoidActivationFunction.h" \
+        ".\DeepEngine-0.2.0\Functions\ActivationFunctions\TanhActivationFunction.h" \
+        ".\DeepEngine-0.2.0\Functions\LossFunctions\LossFunctionInterface.h" \
+        ".\DeepEngine-0.2.0\Functions\LossFunctions\MSELossFunction.h" \
+        ".\DeepEngine-0.2.0\Layers\IdentityLayer.h" \
+        ".\DeepEngine-0.2.0\Layers\InputLayer.h" \
+        ".\DeepEngine-0.2.0\Layers\LayerInterface.h" \
+        ".\DeepEngine-0.2.0\Layers\ReluLayer.h" \
+        ".\DeepEngine-0.2.0\Layers\SigmoidLayer.h" \
+        ".\DeepEngine-0.2.0\Layers\TanhLayer.h" \
+        ".\DeepEngine-0.2.0\Matrix.h" \
+        ".\DeepEngine-0.2.0\Network.h"
+}
+
+macx {
+    SOURCES += ./DeepEngine-0.2.0/Functions/ActivationFunctions/ActivationFunctionInterface.h \
+        ./DeepEngine-0.2.0/Functions/ActivationFunctions/IdentityActivationFunction.h \
+        ./DeepEngine-0.2.0/Functions/ActivationFunctions/ReluActivationFunction.h \
+        ./DeepEngine-0.2.0/Functions/ActivationFunctions/SigmoidActivationFunction.h \
+        ./DeepEngine-0.2.0/Functions/ActivationFunctions/TanhActivationFunction.h \
+        ./DeepEngine-0.2.0/Functions/LossFunctions/LossFunctionInterface.h \
+        ./DeepEngine-0.2.0/Functions/LossFunctions/MSELossFunction.h \
+        ./DeepEngine-0.2.0/Layers/IdentityLayer.h \
+        ./DeepEngine-0.2.0/Layers/InputLayer.h \
+        ./DeepEngine-0.2.0/Layers/LayerInterface.h \
+        ./DeepEngine-0.2.0/Layers/ReluLayer.h \
+        ./DeepEngine-0.2.0/Layers/SigmoidLayer.h \
+        ./DeepEngine-0.2.0/Layers/TanhLayer.h \
+        ./DeepEngine-0.2.0/Matrix.h \
+        ./DeepEngine-0.2.0/Network.h
+}
 
 HEADERS  += mainwindow.h \
     layerwidget.h
