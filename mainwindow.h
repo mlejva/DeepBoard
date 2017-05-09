@@ -18,6 +18,7 @@
 #include "../DeepEngine/DeepEngine/Network.h"
 #include "../DeepEngine/DeepEngine/Layers/TanhLayer.h"
 #include "../DeepEngine/DeepEngine/Layers/ReluLayer.h"
+#include "../DeepEngine/DeepEngine/Layers/LReluLayer.h"
 #include "../DeepEngine/DeepEngine/Layers/SigmoidLayer.h"
 #include "../DeepEngine/DeepEngine/Layers/IdentityLayer.h"
 
@@ -69,7 +70,7 @@ private:
         Matrix<T> networkOutput;
         for (auto epoch = 0; epoch < epochCount; ++epoch)
         {
-            auto output = QStringLiteral("Epoch %1 (out of %2)...").arg(epoch + 1).arg(epochCount + 1);
+            auto output = QStringLiteral("Epoch %1 (out of %2)...").arg(epoch + 1).arg(epochCount);
             MainWindow::printToConsole(output);
 
             // Go through the whole train data
@@ -89,7 +90,7 @@ private:
             if (epoch == epochCount - 1)
                 networkOutput = static_cast<Matrix<T>>(std::get<1>(testTargets));
 
-            output = QStringLiteral("\tTest loss: %1").arg(testLoss);
+            output = QStringLiteral("Test loss: %1").arg(testLoss);
             MainWindow::printToConsole(output);
         }
 
@@ -114,7 +115,7 @@ private:
         std::vector<double> lossData;
         for (auto epoch = 0; epoch < epochCount; ++epoch)
         {
-            auto output = QStringLiteral("Epoch %1 (out of %2)...").arg(epoch).arg(epochCount);
+            auto output = QStringLiteral("Epoch %1 (out of %2)...").arg(epoch + 1).arg(epochCount);
             MainWindow::printToConsole(output);
 
             // Go through the whole train data
@@ -142,7 +143,7 @@ private:
     {
         for (size_t batchIndex = 0; batchIndex < batchCount; ++batchIndex)
         {
-            auto output = QStringLiteral("\tBatch %1 (out of %2)").arg(batchIndex).arg(batchCount);
+            auto output = QStringLiteral("\tBatch %1 (out of %2)").arg(batchIndex + 1).arg(batchCount);
             MainWindow::printToConsole(output);
 
             const auto& batchInput = trainInput.GetRowsFromIndex(batchIndex * batchSize, batchSize);
@@ -178,6 +179,10 @@ private:
             else if (activationFunctionString == "ReLU")
             {
                 n.template AddLayer<Layers::ReluLayer<T>>(outputSize);
+            }
+            else if (activationFunctionString == "Leaky ReLU")
+            {
+                n.template AddLayer<Layers::LReluLayer<T>>(outputSize);
             }
             else if (activationFunctionString == "Sigmoid")
             {

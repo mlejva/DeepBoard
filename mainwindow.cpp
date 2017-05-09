@@ -199,22 +199,22 @@ void MainWindow::runButtonClicked()
                 outputPath.append("/").append(outputFileName).append(".txt");
 
                 MainWindow::runNetwork<float, MSEFloat>(network,
-                                                             trainInput,
-                                                             trainExpectedOutput,
-                                                             testInput,
-                                                             testExpectedOutput,
-                                                             ui->batchSizeSpinBox->value(),
-                                                             ui->epochCountSpinBox->value(),
-                                                             saveNetworkTestOutput,
-                                                             outputPath);
+                                                        trainInput,
+                                                        trainExpectedOutput,
+                                                        testInput,
+                                                        testExpectedOutput,
+                                                        ui->batchSizeSpinBox->value(),
+                                                        ui->epochCountSpinBox->value(),
+                                                        saveNetworkTestOutput,
+                                                        outputPath);
             }
             else
             {
                 MainWindow::runNetwork<float, MSEFloat>(network,
-                                                      trainInput,
-                                                      trainExpectedOutput,
-                                                      ui->batchSizeSpinBox->value(),
-                                                      ui->epochCountSpinBox->value());
+                                                        trainInput,
+                                                        trainExpectedOutput,
+                                                        ui->batchSizeSpinBox->value(),
+                                                        ui->epochCountSpinBox->value());
             }
 
         }
